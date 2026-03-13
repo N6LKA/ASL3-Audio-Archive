@@ -116,8 +116,8 @@ echo "Installing cron job..."
 # Remove any existing entries (handles migration from old /etc/asterisk/local/ path too)
 crontab -l 2>/dev/null | grep -v "cleanup.recordings\|cleanup_recordings" | crontab -
 
-# Add new entry
-(crontab -l 2>/dev/null; echo "$CRON_SCHEDULE $SCRIPT_FILE >/dev/null 2>&1") | crontab -
+# Add new entry with comment
+(crontab -l 2>/dev/null; echo ""; echo "# Cleanup old AllStar recording files on node $NODE"; echo "$CRON_SCHEDULE $SCRIPT_FILE >/dev/null 2>&1") | crontab -
 
 echo "Cron job installed: $CRON_SCHEDULE"
 

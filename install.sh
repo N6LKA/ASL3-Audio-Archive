@@ -55,8 +55,10 @@ if [ ! -f "$CONF_FILE" ]; then
     echo "No configuration file found. Let's set it up."
     echo ""
 
-    read -p "Enter your AllStar node number [501260]: " input_node
-    NODE="${input_node:-501260}"
+    read -p "Enter your AllStar node number: " NODE
+    while [ -z "$NODE" ]; do
+        read -p "Node number is required. Enter your AllStar node number: " NODE
+    done
 
     read -p "Number of days to keep recordings [9]: " input_days
     DAYS_TO_KEEP="${input_days:-9}"

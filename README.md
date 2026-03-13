@@ -25,10 +25,10 @@ Automatically cleans old AllStar recording files from ASL3 nodes. Deletes `.WAV`
 
 ## Installation & Updates
 
-Run the following command on your ASL3 node as root for both fresh installs and updates:
+Run the following command as root or with sudo on your ASL3 node for both fresh installs and updates:
 
 ```bash
-sudo bash <(curl -s https://raw.githubusercontent.com/N6LKA/asl3-cleanup-recordings/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/N6LKA/asl3-cleanup-recordings/main/install.sh)
 ```
 
 **Fresh install:** The installer will prompt you to set your node number, retention days, recording directory, and cron schedule, then create your configuration file and install the cron job automatically.

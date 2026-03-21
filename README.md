@@ -1,5 +1,10 @@
 # asl3-cleanup-recordings
 
+![Release Version](https://img.shields.io/github/v/release/N6LKA/asl3-cleanup-recordings?label=Version&color=f15d24)
+![Release Date](https://img.shields.io/github/release-date/N6LKA/asl3-cleanup-recordings?label=Released&color=f15d24)
+![Hits](https://img.shields.io/endpoint?url=https%3A%2F%2Fhits.dwyl.com%2FN6LKA%2Fasl3-cleanup-recordings.json&label=Hits&color=f15d24)
+![GitHub Repo Size](https://img.shields.io/github/repo-size/N6LKA/asl3-cleanup-recordings?label=Size&color=f15d24)
+
 Automatically cleans old AllStar recording files from ASL3 nodes. Deletes `.WAV` and `.txt` recording files older than a configurable number of days, keeping your storage from filling up over time.
 
 ---

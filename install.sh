@@ -103,29 +103,50 @@ else
     ok "Cron job already present."
 fi
 
-# ── Step 2: Python dependencies ───────────────────────────────────────────────
+# ── Step 2: Python virtual environment + dependencies ────────────────────────
 info "Checking Python 3..."
 command -v python3 &>/dev/null || die "python3 not found. Install it and re-run."
-command -v pip3   &>/dev/null || die "pip3 not found. Install python3-pip and re-run."
 ok "Python 3 found: $(python3 --version)"
 
+info "Setting up Python virtual environment..."
+if ! python3 -m venv --help &>/dev/null; then
+    apt-get install -y -qq python3-venv \
+        || die "python3-venv not available. Run: apt install python3-venv"
+fi
+mkdir -p "$INSTALL_DIR"
+python3 -m venv "$INSTALL_DIR/venv"
+ok "Virtual environment created at $INSTALL_DIR/venv"
+
 info "Installing Python dependencies (fastapi, uvicorn, httpx)..."
-pip3 install -q --break-system-packages fastapi "uvicorn[standard]" httpx \
-    || pip3 install -q fastapi "uvicorn[standard]" httpx
+"$INSTALL_DIR/venv/bin/pip" install -q fastapi "uvicorn[standard]" httpx
 ok "Python dependencies installed."
 
 # ── Step 3: Backend API ───────────────────────────────────────────────────────
 info "Deploying archive API..."
-mkdir -p "$INSTALL_DIR"
 fetch_repo_file "backend/archive_api.py" "$INSTALL_DIR/archive_api.py"
 chmod 644 "$INSTALL_DIR/archive_api.py"
 ok "API deployed to $INSTALL_DIR/archive_api.py"
 
-# Patch RECORDINGS_DIR default in service if needed (uses env var, conf is in service)
+# Generate service file using the venv's uvicorn
 RECORDINGS_DIR="/recordings/${NODE}"
-SVC_SRC="$REPO_TMP_DIR/backend/allmon3-archive.service"
-sed "s|RECORDINGS_DIR=/recordings/501260|RECORDINGS_DIR=${RECORDINGS_DIR}|" \
-    "$SVC_SRC" > "/etc/systemd/system/${SERVICE_NAME}.service"
+VENV_PYTHON="$INSTALL_DIR/venv/bin/python"
+cat > "/etc/systemd/system/${SERVICE_NAME}.service" <<EOF
+[Unit]
+Description=Allmon3 Audio Archive API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=${INSTALL_DIR}
+ExecStart=${VENV_PYTHON} -m uvicorn archive_api:app --host 127.0.0.1 --port 8765
+Restart=always
+RestartSec=5
+Environment=RECORDINGS_DIR=${RECORDINGS_DIR}
+
+[Install]
+WantedBy=multi-user.target
+EOF
 ok "Systemd service installed."
 
 systemctl daemon-reload

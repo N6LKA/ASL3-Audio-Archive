@@ -31,7 +31,8 @@ async def is_authenticated(request: Request) -> bool:
                 headers={"Cookie": cookies},
                 timeout=5.0,
             )
-            return r.json() == "Logged In"
+            data = r.json()
+            return data == "Logged In" or (isinstance(data, dict) and data.get("SUCCESS") == "Logged In")
     except Exception:
         return False
 

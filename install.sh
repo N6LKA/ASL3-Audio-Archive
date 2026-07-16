@@ -171,24 +171,20 @@ else
     cp "$NGINX_CONF" "$BACKUP"
     ok "nginx.conf backed up to $BACKUP"
 
-    # Insert location block before the last closing brace using Python
+    # Append location block at end of file (nginx.conf is a bare list of
+    # location blocks included into a server{} elsewhere — no wrapper to insert into)
     python3 - "$NGINX_CONF" "$NGINX_MARKER" <<'PYEOF'
 import sys
 path, marker = sys.argv[1], sys.argv[2]
 block = f"""
-    {marker}
-    location /allmon3/archive/ {{
-        proxy_pass http://127.0.0.1:8765/archive/;
-        proxy_set_header Host $http_host;
-    }}
+{marker}
+location /allmon3/archive/ {{
+    proxy_pass http://127.0.0.1:8765/archive/;
+    proxy_set_header Host $http_host;
+}}
 """
 content = open(path).read()
-last_brace = content.rfind('}')
-if last_brace == -1:
-    print("ERROR: no closing brace found in nginx.conf", file=sys.stderr)
-    sys.exit(1)
-new_content = content[:last_brace] + block + content[last_brace:]
-open(path, 'w').write(new_content)
+open(path, 'w').write(content.rstrip() + '\n' + block)
 PYEOF
 
     nginx -t 2>/dev/null || die "nginx config test failed after edit. Restoring backup..." \

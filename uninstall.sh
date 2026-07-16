@@ -54,10 +54,9 @@ if grep -q "$NGINX_MARKER" "$NGINX_CONF" 2>/dev/null; then
 import sys, re
 path, marker = sys.argv[1], sys.argv[2]
 content = open(path).read()
-# Remove the block between the marker comment and the closing brace of the location block
-pattern = r'\n\s*' + re.escape(marker) + r'.*?location /allmon3/archive/.*?\}\n'
+pattern = r'\n' + re.escape(marker) + r'.*?location /allmon3/archive/.*?\}\n'
 new_content = re.sub(pattern, '\n', content, flags=re.DOTALL)
-open(path, 'w').write(new_content)
+open(path, 'w').write(new_content.rstrip() + '\n')
 PYEOF
     nginx -t 2>/dev/null && nginx -s reload
     ok "nginx location block removed."

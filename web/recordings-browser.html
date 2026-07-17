@@ -35,12 +35,17 @@
             margin-bottom: 0.4rem;
             font-size: 0.85rem;
             color: #adb5bd;
+            cursor: pointer;
+            user-select: none;
         }
+        .date-header:hover { background: #343a40; }
+        .chevron { display: inline-block; width: 1em; }
+        .group-body { margin-bottom: 0; }
         table { font-size: 0.875rem; margin-bottom: 0; }
         td, th { vertical-align: middle !important; }
         .col-time { width: 70px; white-space: nowrap; }
         .col-size { width: 80px; white-space: nowrap; color: #6c757d; }
-        .col-play { width: 90px; text-align: right; }
+        .col-play { width: 185px; text-align: right; white-space: nowrap; }
         .player-row td { padding: 0.5rem 1rem !important; background: #1a1d20 !important; }
         audio { width: 100%; height: 36px; }
         #status { padding: 3rem 0; text-align: center; }
@@ -205,6 +210,14 @@
             {weekday:'long',year:'numeric',month:'long',day:'numeric'});
     }
 
+    function toggleGroup(header) {
+        const body = header.nextElementSibling;
+        const chevron = header.querySelector('.chevron');
+        const collapsed = body.style.display === 'none';
+        body.style.display = collapsed ? '' : 'none';
+        chevron.textContent = collapsed ? '▾' : '▸';
+    }
+
     function closeAllPlayers() {
         document.querySelectorAll('.player-row').forEach(row => {
             row.style.display = 'none';
@@ -230,31 +243,42 @@
     }
 
     function buildContent(records) {
+        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
         const groups = {};
         records.forEach(r => { (groups[r.date] = groups[r.date] || []).push(r); });
         const frag = document.createDocumentFragment();
         Object.keys(groups).sort().reverse().forEach(date => {
-            const recs = groups[date];
-            const div  = document.createElement('div');
-            div.className = 'date-group';
-            let html = `<div class="date-header">${fmtDate(date)}`
+            const isToday  = date === today;
+            const chevron  = isToday ? '▾' : '▸';
+            const bodyDisp = isToday ? '' : 'none';
+            const recs     = groups[date];
+            const div      = document.createElement('div');
+            div.className  = 'date-group';
+            let html = `<div class="date-header" onclick="toggleGroup(this)">`
+                + `<span class="chevron">${chevron}</span> ${fmtDate(date)}`
                 + ` <span class="fw-normal text-muted">`
                 + `(${recs.length} transmission${recs.length!==1?'s':''})</span></div>`
+                + `<div class="group-body" style="display:${bodyDisp}">`
                 + `<table class="table table-dark table-hover table-sm">`
                 + `<thead><tr><th class="col-time">Time</th>`
                 + `<th class="col-size">Size</th><th class="col-play"></th>`
                 + `</tr></thead><tbody>`;
             recs.forEach(r => {
-                const fn = r.filename.replace(/'/g,"\\'");
+                const fn  = r.filename.replace(/'/g,"\\'");
+                const url = '/allmon3/archive/api/file/' + encodeURIComponent(r.filename);
                 html += `<tr>`
                     + `<td class="col-time">${r.time}</td>`
                     + `<td class="col-size">${fmtSize(r.size)}</td>`
-                    + `<td class="col-play"><button class="btn btn-sm btn-outline-primary play-btn"`
-                    + ` onclick="togglePlay(this,'${fn}')">&#9654; Play</button></td></tr>`
+                    + `<td class="col-play">`
+                    + `<button class="btn btn-sm btn-outline-primary play-btn"`
+                    + ` onclick="togglePlay(this,'${fn}')">&#9654; Play</button>`
+                    + ` <a class="btn btn-sm btn-outline-secondary" href="${url}"`
+                    + ` download="${r.filename}" title="Download">&#11015;</a>`
+                    + `</td></tr>`
                     + `<tr class="player-row" style="display:none">`
                     + `<td colspan="3"><audio controls preload="none"></audio></td></tr>`;
             });
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             div.innerHTML = html;
             frag.appendChild(div);
         });
